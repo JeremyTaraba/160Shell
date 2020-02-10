@@ -166,6 +166,15 @@ int main(int argc, char **argv)
 */
 void eval(char *cmdline) 
 {
+    char *argv[MAXARGS];
+    int retParseLine;
+    if(cmdline != NULL) {
+        retParseLine = parseline(cmdline, argv);
+
+        if(*argv != NULL && !builtin_cmd(argv)){
+
+        }
+    }
     return;
 }
 
@@ -228,10 +237,34 @@ int parseline(const char *cmdline, char **argv)
 
 /* 
  * builtin_cmd - If the user has typed a built-in command then execute
- *    it immediately.  
+ *    it immediately.  returns 0 if the command is not found and 1 if it is found
  */
 int builtin_cmd(char **argv) 
-{
+{  
+    if(strcmp(argv[0], "quit")==0){        //compares characters of each string, returns 0 if equal
+        for(int i=0; i<MAXJOBS; i++) {
+                	if(jobs[i].state==ST) {         //ST = stopped
+                        	printf("[%d] (%d) Stopped", jobs[i].jid, jobs[i].pid);         /* checking for stopped jobs and printing them */
+                       		return 1;                                      /* if a jobs is stopped then not exited but only returned */
+                	}
+                }
+        exit(0);
+    }
+   if(strcmp(argv[0],"jobs")==0){
+		listjobs(jobs);
+        printf("yes, jobs\n");
+		return 1;
+	}
+	if(strcmp(argv[0],"fg")==0){
+		do_bgfg(argv);
+		return 1;
+	}
+	if(strcmp(argv[0],"bg")==0){
+		do_bgfg(argv);
+		return 1;
+	}
+
+
     return 0;     /* not a builtin command */
 }
 
@@ -273,7 +306,15 @@ void sigchld_handler(int sig)
  *    to the foreground job.  
  */
 void sigint_handler(int sig) 
-{
+{ 
+    pid_t pid = fgpid(jobs);
+        if(pid == 0){
+		printf("there are no foreground jobs currently\n"); 
+                return;       
+	}
+        else if(pid > 0){
+                kill(-pid, SIGINT);
+        }
     return;
 }
 
@@ -284,6 +325,14 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig) 
 {
+    pid_t pid = fgpid(jobs);
+        if(pid == 0){
+		printf("there are no foreground jobs currently\n"); 
+                return;       
+	}
+        else if(pid > 0){
+                kill(-pid, SIGTSTP);
+        }
     return;
 }
 
