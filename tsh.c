@@ -171,31 +171,30 @@ void eval(char *cmdline)
     pid_t childp;
     struct job_t *jbid;
 
-
     if(cmdline != NULL) {
-        retParseLine = parseline(cmdline, argv);
+        retParseLine = parseline(cmdline, argv);         //returns true if bg and false if fg
 
         if(*argv != NULL && builtin_cmd(argv) == 0){
 
             if((childp=fork()) == 0){                  //create child process to execute commands
                 setpgid(0,0);                          //puts the child in a new process group so only one process in fg
-                int fail=0;
-                fail = execvp(argv[0],argv);                  /* execing the non-builltin command */
-                if(fail==-1){
+                int checkCommand = 0;                   //use to check if command is real, exec returns -1 on false command
+                checkCommand = execvp(argv[0],argv);                 //execute the command
+                if(checkCommand == -1){                             //command does not exist
                         printf("%s: Command not found \n",argv[0]);
                         exit(0);
                 }
             }
             else {        //only the parent goes here
                     //foreground jobs
-                if(retParseLine==0) {
+                if(!retParseLine) {                                
                         addjob(jobs, childp, FG, cmdline);             /* adding foreground job */
                         waitfg(childp);                                /* waiting for sigchld signal or any other signal in waitfg as it is a foreground process */ 
                 }
                     //background jobs
                 else {
                         addjob(jobs, childp, BG, cmdline);              /* adding  background job */
-                        jbid=getjobpid(jobs, childp);                   /* getting the job from the process id */
+                        jbid = getjobpid(jobs, childp);                   /* getting the job from the process id */
                         printf("[%d] (%d) %s", jbid->jid, jbid->pid, jbid->cmdline);
                 }
         	}
@@ -298,6 +297,7 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
+
     return;
 }
 
@@ -350,7 +350,7 @@ void sigint_handler(int sig)
 	}
     else if(pid > 0){
         kill(-pid, SIGINT);         //kill the job
-        printf("[%d] (%d) terminated by SIGINT\n", jobs->jid, jobs->pid);
+        printf("job: [%d] pid: (%d) terminated by SIGINT\n", jobs->jid, jobs->pid);
         deletejob(jobs, pid);       //delete the job
     }
 
