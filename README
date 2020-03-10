@@ -20,9 +20,12 @@ mysplit.c	    # Forks a child that spins for <n> seconds
 mystop.c      # Spins for <n> seconds and sends SIGTSTP to itself
 myint.c       # Spins for <n> seconds and sends SIGINT to itself
 
+# Note: I used cygwin to run this shell
 
 How to run:
 - first do "make tsh.c" and see that everything works fine
 - do "./tsh.c" to run the shell
 - "make test##" to run tests 1-16 on tsh.c EX: make test01
 - "make rtest##" to see expected output from tshref.out
+
+
